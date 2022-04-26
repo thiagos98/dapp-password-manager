@@ -110,12 +110,22 @@ body {
     margin-bottom: 24px;
 }
 
-/* .botao {
+.result-list {
+    font-family: 'Righteous';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 40px;
+
+    color: #FFFFFF;
+}
+
+.botao {
     font-family: 'Sarala';
     font-style: normal;
     font-weight: 700;
-    font-size: 16px;
-    line-height: 26px;
+    font-size: 12px;
+    line-height: 24px;
 
     display: flex;
     align-items: center;
@@ -123,9 +133,7 @@ body {
     letter-spacing: 0.04em;
     text-transform: uppercase;
 
-    color: #FFFFFF;
-    background: #000000;
     border: 2px solid #000000;
-    box-sizing: border-box;
-    border-radius: 6px;
-} */
+    
+    border-radius: 6px; 
+}
