@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/3.0.0-rc.5/web3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Dapp Password Manager</title>
+</head>
+
+<body>
+    <header class="header">
+        <h1 class="header-titulo">Dapp Password Manager</h1>
+        <nav class="header-nav">
+            <a class="header-nav-item">Cadastro</a>
+            <a class="header-nav-item">Senhas</a>
+        </nav>
+    </header>
+
+    <main class="conteudo-principal">
+        <div class="enable-metamask">
+            <button type="submit" class="botao" id="enableMetamask">
+                Conectar a Metamask
+            </button>
+        </div>
+        <div class="cadastro-senha">
+            <h4 class="titulo-form">Insira seu endereço e senha para se cadastrar</h2>
+                <div class="form cadastro-senha-form">
+                    <div class="cadastro-senha-form-endereco">
+                        <input class="input" id="enderecoCadastro" type="text" name="endereco" id="endereco"
+                            placeholder="Insira seu endereço">
+                    </div>
+
+                    <div class="cadastro-senha-form-senha">
+                        <input class="input" id="senhaCadastro" type="text" name="senha" id="senha"
+                            placeholder="Insira seu senha">
+                    </div>
+
+                    <div class="cadastro-senha-form-botao">
+                        <button class="botao" id="botaoSalvar">Guardar Senha</button>
+                    </div>
+                </div>
+        </div>
+
+        <div class="buscar-senha">
+            <h4 class="titulo-form">Digite seu endereço para resgatar suas senhas</h4>
+
+            <div class="form buscar-senha-form">
+                <div class=" buscar-senha-form-endereco">
+                    <input class="input" id="enderecoBuscar" type="text" name="endereco" id="endereco"
+                        placeholder="Insira seu endereço">
+                </div>
+                <div>
+                    <button class="botao" id="botãoBuscar">Buscar Senhas</button>
+                </div>
+                <div class="result-list-name">
+                    <span>
+                        <i id="GetPassword"></i>
+                    </span>
+                </div>
+            </div>
+
+
+
+        </div>
+    </main>
+
+    <script>
+        let currentAccount = null;
+        let web3;
+        // notebook avell
+        // let contractAddress = "0xA52fAfa387171C260b3860dF2D19e08939b825D4";
+        // notebook samsung
+        let contractAddress = "0x5BEEA3860bd0342197497e9A30e0D73f884F23D5";
+        let abi = [{
+                "inputs": [{
+                        "internalType": "address",
+                        "name": "addr",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "password",
+                        "type": "string"
+                    }
+                ],
+                "name": "savePassword",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{
+                    "internalType": "uint256",
+                    "name": "index",
+                    "type": "uint256"
+                }],
+                "name": "getAddress",
+                "outputs": [{
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getNumAddresses",
+                "outputs": [{
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{
+                    "internalType": "address",
+                    "name": "addr",
+                    "type": "address"
+                }],
+                "name": "getNumPasswords",
+                "outputs": [{
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{
+                        "internalType": "address",
+                        "name": "addr",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "index",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "getPassword",
+                "outputs": [{
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ]
+
+        function handleAccountsChanged(accounts) {
+            console.log('Calling Handle Changed');
+
+            if (accounts.length === 0) {
+                console.log('Please connect to metamask');
+                $('#enableMetamask').html('Conectar ao metamask');
+            } else if (accounts[0] !== currentAccount) {
+                currentAccount = accounts[0];
+                $('#enableMetamask').html(currentAccount);
+                $('status').html('');
+
+                if (currentAccount != null) {
+                    $('#enableMetamask').html(currentAccount).remove('btn-primary');
+                    $('#enableMetamask').attr('disabled', true);
+                }
+            }
+            console.log('Endereco da conta corrente = ' + currentAccount);
+        }
+
+        function connect() {
+            console.log('Calling Connect()');
+
+            ethereum
+                .request({
+                    method: 'eth_requestAccounts'
+                })
+                .then(handleAccountsChanged)
+                .catch((err) => {
+                    if (err.code === 4001) {
+                        console.log('Please connect to metamask');
+                        $('#status').html('Você recusou conectar ao metamask')
+                    } else {
+                        console.log(err);
+                    }
+                });
+        }
+
+        function detectMetamask() {
+            if (typeof window.ethereum !== 'undefined') {
+                return true;
+            } else {
+                return false
+            }
+        }
+
+        async function savePassword() {
+            let password = $('#senhaCadastro').val();
+            let address = $('#enderecoCadastro').val();
+
+            if (password.length > 0 && address.length > 0) {
+                let contract = new web3.eth.Contract(abi, contractAddress);
+                await contract.methods.savePassword(address, password).send({
+                    from: currentAccount
+                });
+                $('#senhaCadastro').val('');
+                $('#enderecoCadastro').val('');
+                alert('Senha salva com sucesso');
+            } else {
+                alert('Preencha todos os campos');
+            }
+        }
+
+        async function getPasswords() {
+            let address = $('#enderecoBuscar').val();
+            let contract = new web3.eth.Contract(abi, contractAddress);
+            let numPasswords = await contract.methods.getNumPasswords(address).call();
+            let passwords = [];
+            for (let i = 0; i < numPasswords; i++) {
+                passwords.push(await contract.methods.getPassword(address, i).call());
+            }
+
+            $('#GetPassword').html('');
+            passwords.forEach(element => {
+                
+                $('#GetPassword').append(
+                    '<tr>' +
+                    '<td>senha: ' + element + '</td>' +
+                    '</tr>'
+                );
+                $('#GetPassword').append('<br>');
+            });
+        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            m = detectMetamask();
+            if (m) {
+                $('#metaicon').removeClass('meta-gray');
+                $('#metaicon').addClass('meta-normal');
+                $('#enableMetamask').attr('disabled', false);
+
+                web3 = new Web3(window.ethereum);
+            } else {
+                $('#metaicon').removeClass('meta-normal');
+                $('#metaicon').addClass('meta-gray');
+                $('#enableMetamask').attr('disabled', true);
+                web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
+            }
+        });
+
+        $('#enableMetamask').click(function () {
+            connect();
+        });
+        $('#botaoSalvar').click(function () {
+            savePassword();
+        });
+        $('#botãoBuscar').click(function () {
+            getPasswords();
+        });
+    </script>
+</body>
+
+</html>
